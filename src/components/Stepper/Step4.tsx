@@ -4,47 +4,14 @@ import { Container } from "../Container";
 import { HeaderContainer } from "../HeaderContainer";
 import { Input } from "../Input";
 import { useState } from "react";
-import toast from "react-hot-toast";
-import { IDbuilder, IDfunder } from "@/utils";
-import {
-  useAccount,
-  useContractRead,
-  useContractWrite,
-  usePrepareContractWrite,
-} from "wagmi";
+import { IDfunder } from "@/utils";
+import { useAccount, useContractWrite, usePrepareContractWrite } from "wagmi";
 import { BigNumber } from "ethers";
-import { Web3Connection, ERC20 } from "@taikai/dappkit";
+import toast from "react-hot-toast";
 
-export async function Step4() {
+export function Step4() {
   const [id, setId] = useState("");
   const { address } = useAccount();
-
-  const connection = new Web3Connection({
-    web3Host: process.env.WEB3_HOST_PROVIDER,
-  });
-
-  async function Claim() {
-    await connection.start();
-    await connection.connect();
-
-    const erc20Deployer = new ERC20(connection);
-    await erc20Deployer.loadAbi();
-
-    const tx = await erc20Deployer.deployJsonAbi(
-      "Hype-tech",
-      "HYPETECH",
-      "1000000000000000000000000",
-      await erc20Deployer.connection.getAddress()
-    );
-
-    const myToken = new ERC20(connection, tx.contractAddress);
-
-    await myToken.start();
-    await myToken.transferTokenAmount(
-      "endereco que vou te mandar",
-      1000000000000000000000000 - 1
-    );
-  }
 
   const { config } = usePrepareContractWrite({
     address: IDfunder.mumbai.contractAddress,
@@ -59,16 +26,9 @@ export async function Step4() {
 
   const { writeAsync } = useContractWrite(config);
 
-  const { data } = useContractRead({
-    address: IDbuilder.mumbai.contractAddress,
-    abi: IDbuilder.mumbai.abi,
-    functionName: "totalSupply",
-  });
-
-  console.log(Number(data));
-
   async function handleFunction() {
-    if (!id || !writeAsync) return toast.error("Preencha o ID!");
+    if (!id) return toast.error("Preencha o ID!");
+    if (!writeAsync) return toast.error("Sem mint!");
     const hash = await writeAsync();
     toast.success("Sucesso ao Reclamar!");
     console.log(hash);

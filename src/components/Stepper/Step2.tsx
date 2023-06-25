@@ -2,34 +2,26 @@ import Image from "next/image";
 import { Button } from "../Button";
 import { Container } from "../Container";
 import { Input } from "../Input";
-import { useSmartContext } from "@/contexts";
 import { useVerifyUserMinted } from "@/hooks/useVerifyUserMinted";
-import { StepperStore } from "@/store";
-import { useState } from "react";
 import { HeaderContainer } from "../HeaderContainer";
+import { useAccount, useContractRead } from "wagmi";
+import { ProRec } from "@/utils/ProRec";
+import { useState } from "react";
 
 export function Step2() {
-  const { smartAccount } = useSmartContext();
-  const [hash, setHash] = useState<any>("");
-  const [isTransactionInProgress, setIsTransactionInProgress] = useState(false);
-  const [showHashLink, setShowHashLink] = useState<boolean>(false);
-  const { setStep } = StepperStore();
-  const address = "0xb037948823BAf3d926f92E0C6e746A602dB1f8c9";
+  const { address } = useAccount();
   const { userHasMint } = useVerifyUserMinted(address!);
+  const [id, setId] = useState("");
+
+  const { data, error } = useContractRead({
+    address: ProRec.mumbai.contractAddress,
+    abi: ProRec.mumbai.abi,
+    functionName: "getProject",
+    args: [id],
+  });
 
   async function handleFunction() {
-    /* if (smartAccount && address && tokenId) {
-      console.log("casdas");
-      const nftInstance = new NFTManager(smartAccount);
-      setIsTransactionInProgress(true);
-      console.log(address, tokenId);
-      const hashTicket = await nftInstance.mintNFT(address, tokenId);
-      console.log(hashTicket);
-      setHash(hashTicket);
-      setShowHashLink(true);
-      setIsTransactionInProgress(false);
-    } */
-    setStep(2);
+    console.error(error);
   }
 
   return (
@@ -40,7 +32,7 @@ export function Step2() {
           Selecione o id do projeto que quer participar:
         </p>
         <div className="w-1/2 flex flex-col gap-14">
-          <Input placeholder="ID" />
+          <Input placeholder="ID" onChange={(e) => setId(e.target.value)} />
           <Button disabled={userHasMint} onClick={handleFunction}>
             Participar
           </Button>
