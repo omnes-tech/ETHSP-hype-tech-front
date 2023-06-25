@@ -1,12 +1,11 @@
+import { IDbuilder } from "@/utils";
 /* eslint-disable no-console */
 import type SmartAccount from "@biconomy/smart-account";
 import { ethers } from "ethers";
 import { toast } from "react-toastify";
 
-import { IDbuilder } from "@/utils";
-
 type ContractConfig = {
-  polygon: {
+  polygonMumbai: {
     contractAddress: string;
     abi: typeof IDbuilder.mumbai.abi;
   };
@@ -16,13 +15,13 @@ export class NFTManager {
   private isTransactionPending = false;
 
   private nftInterface = new ethers.utils.Interface([
-    "function mintLegalEng() ",
+    "function mintBuilder(string memory _email, bool _student, bool _teacher)",
     "function safeTransferFrom(address from, address to, uint256 tokenId)",
   ]);
 
   private contractConfig: ContractConfig = {
-    polygon: {
-      contractAddress: "0x60cb723638F073142994a73130dd2bf7f96e7154",
+    polygonMumbai: {
+      contractAddress: IDbuilder.mumbai.contractAddress,
       abi: IDbuilder.mumbai.abi,
     },
   };
@@ -31,7 +30,7 @@ export class NFTManager {
 
   constructor(smartAccount: SmartAccount) {
     this.contractConfig = {
-      polygon: {
+      polygonMumbai: {
         contractAddress: IDbuilder.mumbai.contractAddress,
         abi: IDbuilder.mumbai.abi,
       },
@@ -39,10 +38,18 @@ export class NFTManager {
     this.smartAccount = smartAccount;
   }
 
-  private generateMintData(): any {
-    const data = this.nftInterface.encodeFunctionData("mintLegalEng");
+  private generateMintData(
+    email: string,
+    isStudant: boolean,
+    isProf: boolean
+  ): any {
+    const data = this.nftInterface.encodeFunctionData("mintBuilder", [
+      email,
+      isStudant,
+      isProf,
+    ]);
     const tx = {
-      to: this.contractConfig.polygon.contractAddress,
+      to: this.contractConfig.polygonMumbai.contractAddress,
       data,
     };
     return tx;
@@ -59,7 +66,7 @@ export class NFTManager {
       tokenId,
     ]);
     const tx = {
-      to: this.contractConfig.polygon.contractAddress,
+      to: this.contractConfig.polygonMumbai.contractAddress,
       data,
     };
     return tx;
@@ -81,11 +88,9 @@ export class NFTManager {
       this.smartAccount.on("error", (response: any) => {
         toast.error("error event received via emitter", response);
       });
-
       const txResponse = await this.smartAccount.sendTransactionBatch({
         transactions: TxData,
       });
-
       toast.info(`Gerando o hash de transação: ${txResponse}`);
 
       const txReciept = await txResponse.wait();
@@ -98,9 +103,19 @@ export class NFTManager {
     return null;
   }
 
-  public async mintNFT(addressSigner: `0x${string}`, tokenId: number) {
+  public async mintNFT(
+    addressSigner: `0x${string}`,
+    email: string,
+    isStudant: boolean,
+    isProf: boolean,
+    tokenId: number
+  ) {
     if (this.smartAccount) {
-      const txGenerateMintData = this.generateMintData();
+      const txGenerateMintData = this.generateMintData(
+        email,
+        isStudant,
+        isProf
+      );
       const txGenerateTransferData = this.generateTransferData(
         this.smartAccount.address,
         addressSigner,

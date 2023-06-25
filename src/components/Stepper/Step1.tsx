@@ -3,84 +3,76 @@ import { Container } from "../Container";
 import { Input } from "../Input";
 import { Button } from "../Button";
 import { useSmartContext } from "@/contexts/smart-account";
-import { useState } from "react";
-import { useAccount, useContractWrite } from "wagmi";
-import { useVerifyUserMinted } from "@/hooks/useVerifyUserMinted";
+import { useAccount, useContractWrite, usePrepareContractWrite } from "wagmi";
 import { StepperStore } from "@/store";
 import { HeaderContainer } from "../HeaderContainer";
 import { Select } from "../Input/select";
 import toast from "react-hot-toast";
-import { IDbuilder, IDfunder, IDsubmit } from "@/utils";
+import { IDfunder, IDsubmit, NFTManager } from "@/utils";
+import { BigNumber } from "ethers";
+import { useLastTokenId } from "@/hooks/useFetchLastNFT";
 
 export function Step1() {
   const { smartAccount } = useSmartContext();
-  const { setStep, select, email, setEmail } = StepperStore();
+  const { select, email, setEmail } = StepperStore();
+  const tokenId = useLastTokenId();
   const { address } = useAccount();
-  const { userHasMint } = useVerifyUserMinted(address!);
-
   const isProf = select === "Professor";
   const isStudant = select === "Aluno";
-  const isBuilder = select === "Professor" || "Aluno";
+  const isBuilder = select === "Professor" || select === "Aluno";
   const isFunder = select === "Financiador";
-  const isLoyalt = true;
+  const isLoyalt = false;
 
-  const { writeAsync: writeBuilder } = useContractWrite({
-    mode: "recklesslyUnprepared",
-    address: IDbuilder.mumbai.contractAddress,
-    abi: IDbuilder.mumbai.abi,
-    functionName: "mintBuilder",
-    args: [email, isStudant, isProf],
-  });
-
-  const { writeAsync: writeFunder } = useContractWrite({
-    mode: "recklesslyUnprepared",
+  const { config: configFunder } = usePrepareContractWrite({
     address: IDfunder.mumbai.contractAddress,
     abi: IDfunder.mumbai.abi,
     functionName: "mintFunder",
+    overrides: {
+      from: address,
+      gasLimit: 1000000 as unknown as BigNumber,
+    },
     args: [email, isLoyalt],
   });
 
-  const { writeAsync: writeSubmit } = useContractWrite({
-    mode: "recklesslyUnprepared",
+  const { config: configSubmit } = usePrepareContractWrite({
     address: IDsubmit.mumbai.contractAddress,
     abi: IDsubmit.mumbai.abi,
-    functionName: "mintFunder",
-    args: [email, isLoyalt],
+    functionName: "mintSubmit",
+    overrides: {
+      from: address,
+      gasLimit: 1000000 as unknown as BigNumber,
+    },
+    args: [email],
   });
 
+  const { writeAsync: writeFunder } = useContractWrite(configFunder);
+
+  const { writeAsync: writeSubmit } = useContractWrite(configSubmit);
+
   async function handleFunction() {
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    if (!select || !emailValid) return toast.error("Preencha as informações!");
-    try {
+    if (smartAccount && address) {
+      toast.loading("Mintando...", { duration: 3000 });
       if (isBuilder) {
-        const hash = await writeBuilder();
+        const nftInstance = new NFTManager(smartAccount);
+        const hashTicket = await nftInstance.mintNFT(
+          address,
+          email,
+          isStudant,
+          isProf,
+          tokenId!
+        );
         toast.success("Sucesso ao Mintar!");
-        console.log("builder hash: ", hash);
-      } else if (isFunder) {
+        console.log(hashTicket);
+      } else if (isFunder && writeFunder) {
         const hash = await writeFunder();
         toast.success("Sucesso ao Mintar!");
-        console.log("funder hash: ", hash);
-      } else {
+        console.log(hash);
+      } else if (!isFunder && !isBuilder && writeSubmit) {
         const hash = await writeSubmit();
         toast.success("Sucesso ao Mintar!");
-        console.log("submiter hash: ", hash);
+        console.log(hash);
       }
-      setStep(2);
-    } catch (error) {
-      toast.error("Erro ao Mintar! Tente novamente...");
     }
-    /* if (smartAccount && address && tokenId) {
-      console.log("caiu");
-      const nftInstance = new NFTManager(smartAccount);
-      setIsTransactionInProgress(true);
-      console.log(address, tokenId);
-      const hashTicket = await nftInstance.mintNFT(address, tokenId);
-      console.log(hashTicket);
-      setHash(hashTicket);
-      setShowHashLink(true);
-      setIsTransactionInProgress(false);
-      
-    } */
   }
 
   return (
@@ -100,11 +92,7 @@ export function Step1() {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <Button
-          className="mt-8"
-          disabled={userHasMint}
-          onClick={handleFunction}
-        >
+        <Button className="mt-8" onClick={handleFunction}>
           REGISTRO DE IDENTIDADES
         </Button>
       </Container>

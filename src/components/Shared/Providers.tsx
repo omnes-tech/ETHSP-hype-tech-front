@@ -13,22 +13,17 @@ import {
 import type { PropsWithChildren } from "react";
 import React from "react";
 import { configureChains, createClient, WagmiConfig } from "wagmi";
-import { goerli, polygon, polygonMumbai } from "wagmi/chains";
+import { polygonMumbai } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 import { SmartContextProvider } from "@/contexts";
 import { Layout } from "./Layout";
 
 const { chains, provider, webSocketProvider } = configureChains(
-  [
-    polygon,
-    goerli,
-    polygonMumbai,
-    ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true" ? [goerli] : []),
-  ],
+  [polygonMumbai],
   [publicProvider()]
 );
 
-const projectId = "YOUR_PROJECT_ID";
+const projectId = "4ebbf2eddb8738c4c84cd8082b5e9756";
 
 const { wallets } = getDefaultWallets({
   appName: "RainbowKit demo",

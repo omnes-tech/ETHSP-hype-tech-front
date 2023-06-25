@@ -11,25 +11,10 @@ export function HeaderContainer() {
   const lastFour = address?.slice(-4);
   const result = `${firstFour}...${lastFour}`;
 
-  async function handleFunction() {
-    /* if (smartAccount && address && tokenId) {
-      console.log("casdas");
-      const nftInstance = new NFTManager(smartAccount);
-      setIsTransactionInProgress(true);
-      console.log(address, tokenId);
-      const hashTicket = await nftInstance.mintNFT(address, tokenId);
-      console.log(hashTicket);
-      setHash(hashTicket);
-      setShowHashLink(true);
-      setIsTransactionInProgress(false);
-    } */
-    setStep(2);
-  }
-
   return (
     <div className="flex justify-between items-center">
       <Image src={"/logo.png"} alt="logo" width={200} height={200} />
-      <div className="flex gap-4 items-center text-white">
+      <div className="flex gap-10 items-center text-white">
         <p onClick={() => setStep(1)} className="cursor-pointer">
           HOME
         </p>

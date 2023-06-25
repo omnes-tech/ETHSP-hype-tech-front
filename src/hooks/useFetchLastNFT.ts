@@ -1,9 +1,8 @@
+import { IDbuilder } from '@/utils';
 import { useEffect, useState } from 'react';
 import { useContractRead } from 'wagmi';
 
-export {}
-
-/* interface LastTotalSupply {
+interface LastTotalSupply {
   data: { toNumber: () => number } | undefined;
   error: any;
 }
@@ -12,8 +11,8 @@ export const useLastTokenId = () => {
   const [lastTokenId, setLastTokenId] = useState<number | undefined>(undefined);
 
   const getLastTotalSupply: LastTotalSupply = useContractRead({
-    address: legalEnginnerContract.polygon.contractAddress,
-    abi: legalEnginnerContract.polygon.abi,
+    address: IDbuilder.mumbai.contractAddress,
+    abi: IDbuilder.mumbai.abi,
     functionName: 'totalSupply',
   });
 
@@ -26,4 +25,3 @@ export const useLastTokenId = () => {
 
   return lastTokenId;
 };
- */

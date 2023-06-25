@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
-'use client'
-import { ChainId } from '@biconomy/core-types';
-import SmartAccount from '@biconomy/smart-account';
-import { ethers } from 'ethers';
-import type { FC } from 'react';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useAccount, useSigner } from 'wagmi';
+"use client";
+import { ChainId } from "@biconomy/core-types";
+import SmartAccount from "@biconomy/smart-account";
+import { ethers } from "ethers";
+import type { FC } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { useAccount, useSigner } from "wagmi";
 
 type SmartContextProviderProps = {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ type SmartContextType = {
 
 export const SmartContext = createContext<SmartContextType>({
   smartAccount: null,
-  scwAddress: '',
+  scwAddress: "",
   scwLoading: false,
 });
 
@@ -27,7 +27,7 @@ export const useSmartContext = () => {
   const context = useContext(SmartContext);
   if (!context) {
     throw new Error(
-      'useSmartContext must be used within a SmartContextProvider'
+      "useSmartContext must be used within a SmartContextProvider"
     );
   }
   return context;
@@ -37,29 +37,29 @@ export const SmartContextProvider: FC<SmartContextProviderProps> = ({
   children,
 }) => {
   const [smartAccount, setSmartAccount] = useState<SmartAccount | null>(null);
-  const [scwAddress, setScwAddress] = useState('');
+  const [scwAddress, setScwAddress] = useState("");
   const [scwLoading, setScwLoading] = useState(false);
   const { data: signer } = useSigner();
   const { address } = useAccount();
 
   useEffect(() => {
     async function setupSmartAccount() {
-      setScwAddress('');
+      setScwAddress("");
       setScwLoading(true);
       const walletProvider = new ethers.providers.Web3Provider(
         (signer?.provider as any).provider
       );
       const sAccount = new SmartAccount(walletProvider, {
-        activeNetworkId: ChainId.POLYGON_MAINNET,
-        supportedNetworksIds: [ChainId.POLYGON_MAINNET],
+        activeNetworkId: ChainId.POLYGON_MUMBAI,
+        supportedNetworksIds: [ChainId.POLYGON_MUMBAI],
         networkConfig: [
           {
-            chainId: 137,
-            dappAPIKey: 'yKVYUwzaf.7391e07c-2183-4d3c-8bdd-e4c7a2db9a67',
+            chainId: 80001,
+            dappAPIKey: "O3OQeZnU3.2dcdd4b4-b346-4873-80dd-bb3b74cf1c3a",
           },
         ],
       });
-      
+
       await sAccount.init();
       const context = sAccount.getSmartAccountContext();
       setScwAddress(context.baseWallet.getAddress());
@@ -69,7 +69,6 @@ export const SmartContextProvider: FC<SmartContextProviderProps> = ({
 
     if (!!signer?.provider && !!address) {
       setupSmartAccount();
-      console.log('Provider...', signer?.provider);
     }
   }, [address, signer?.provider]);
 
